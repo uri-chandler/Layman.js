@@ -1,0 +1,8 @@
+{
+  "name"		: "layman",
+  "description"	: "A simple manager for HTTP request <--> response layers in node.js",
+  "author"		: "UJC <code@isnice.me>",
+  "version"		: "0.0.2",
+  "main"		: "layman.js",
+  "license"		: "MIT"
+}
