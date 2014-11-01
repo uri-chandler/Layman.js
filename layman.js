@@ -6,30 +6,65 @@
 // Exporting the 'layman' function after it's properly setup
 module.exports = (function(){
 
+
+	// +-----------------------------------------+
+	// | Private. Setup and init				 |
+	// +-----------------------------------------+
+
 	var handlers = [],									// Will hold all the request handlers
-		url		 = require('url'),						// Just so it's easier to get the requested path
-		layman;											// Will hold the main function returned by require('layman')
+		url		 = require('url');						// Just so it's easier to get the requested path
 		
 		
-	// The main 'layman' function. Pass this function as your only request handler to your server
-	layman = function (req,res){
+	/**
+		Adds the passed in layer as middleware that layman will use to handle incoming Request <--> Response pairs
+		
+		@params layer	An object containing a path, method, and callback.
+						path is the route for which the callback will be triggered.
+						method is the HTTP method for which the callback will be triggered.
+						callback is the middleware function that will receive 2 arguments: request, response
+	*/
+	function addLayer(layer){
+		
+		handlers.push({
+			path	: layer.path,
+			method	: layer.method,
+			callback: layer.callback || function(){}
+		});
+	}	
+
+	/**
+		The main 'layman' function. Pass this function as your only request handler to your server
 	
-		// Get the path that was requested
-		var path = url.parse(req.url).pathname;
+		@params	req		The HTTP request object
+		@params	res		The HTTP response object
+	*/
+	function layman(req,res){
+	
+		// Get the path and method for the request
+		var path	= url.parse(req.url).pathname,
+			method	= req.method;
 		
 		// By order of FIFO, go over each request handler
 		handlers.every(function(handler){
 			
-			// Only call the request handler if the handler is supposed to handle that path
-			if (path === handler.path || handler.path === '*'){
+			var matchPath	= handler.path === undefined || handler.path === path,
+				matchMethod	= handler.method === undefined || handler.method === method,
+				result;
+
+			// If the handler is supposed to handle this request
+			if (matchPath && matchMethod){
 				
-				// If the handler should terminate the request-handlers chain - return false to the 'handlers.every' iterator.
-				// Else, return true, and the next handler will be called
-				if (handler.callback(req, res) === false) return false;
+				// Trigger the handler and save it's return value
+				result = handler.callback(req, res);
+				
+				// If the handler resulted in 'false', end the response (no additional handlers will be triggered)
+				if (result === false) return false;
+				
+				// Otherwise, continue the next handler
 				else return true;
 			}
 			
-			// It this request handler is only called on paths OTHER than the requested path, simply skip it by returning true
+			// Otherwise, skip to the next handler
 			return true;
 		});
 		
@@ -38,39 +73,97 @@ module.exports = (function(){
 		res.end();
 	}
 	
+
 	
-	// Adds a layer to handle incoming request\response. Usage: layman.use( [path], callback)
-	layman.use = function use(){
 	
-		// Arguments 2 Array
-		var args = [].slice.call(arguments);
+	// +-----------------------------------------+
+	// | Add methods to allow registering layers |
+	// +-----------------------------------------+
+	
+	/**
+		Registers the passed in middleware as a layer to use for all types of requests (GET\POST\...)
 		
-		
-		// If the registered request handler doesn't is not for a specific URI path (i.e. only a callback was passed in)
-		if (args.length === 1){
+		@params [route]		If specified, the registered middleware will only be triggered for this route.
+		@params callback	The actual middleware (callback) that will handle the request\response.
+	*/
+	layman.use = function use(route, callback){
+	
+		// Overload 1: Calling use(callback)
+		if (arguments.length === 1 && typeof arguments[0] === 'function'){
 			
-			// Make sure that the callback is indeed a function, and add it as a callback for all path's
-			typeof args[0] === 'function' && handlers.push({
-		
-				path	: '*',
-				callback: args[0]
-			});
+			addLayer( {callback: arguments[0]} );
 		}
 		
-		// If both a path AND a callback were passed in
-		if (args.length === 2){
+		// Overload 2: Calling use(route, callback)
+		if (arguments.length === 2 && typeof arguments[0] === 'string' && typeof arguments[1] === 'function'){
 			
-			// Validate the parameter's type, and add it as a request-handler for that specific path
-			typeof args[0] === 'string' && typeof args[1] === 'function' && handlers.push({
+			addLayer({
+				
+				path	: arguments[0].indexOf('/') !== 0 ? '/' + arguments[0] : arguments[0],
+				callback: arguments[1]
+			});
+		}
+	}
+	
+	/**
+		Registers the passed in middleware as a layer to use for GET requests
 		
-				path	: args[0],
-				callback: args[1]
+		@params [route]		If specified, the registered middleware will only be triggered for this route.
+		@params callback	The actual middleware (callback) that will handle the request\response.
+	*/
+	layman.get = function get(route, callback){
+	
+		// Overload 1: Calling get(callback)
+		if (arguments.length === 1 && typeof arguments[0] === 'function'){
+			
+			addLayer( {callback: arguments[0]} );
+		}
+		
+		// Overload 2: Calling get(route, callback)
+		if (arguments.length === 2 && typeof arguments[0] === 'string' && typeof arguments[1] === 'function'){
+			
+			addLayer({
+				
+				method	: 'GET',
+				path	: arguments[0].indexOf('/') !== 0 ? '/' + arguments[0] : arguments[0],
+				callback: arguments[1]
+			});
+		}
+	}
+	
+	/**
+		Registers the passed in middleware as a layer to use for POST requests
+		
+		@params [route]		If specified, the registered middleware will only be triggered for this route.
+		@params callback	The actual middleware (callback) that will handle the request\response.
+	*/
+	layman.post = function post(route, callback){
+	
+		// Overload 1: Calling post(callback)
+		if (arguments.length === 1 && typeof arguments[0] === 'function'){
+			
+			addLayer( {callback: arguments[0]} );
+		}
+		
+		// Overload 2: Calling post(route, callback)
+		if (arguments.length === 2 && typeof arguments[0] === 'string' && typeof arguments[1] === 'function'){
+			
+			addLayer({
+				
+				method	: 'POST',
+				path	: arguments[0].indexOf('/') !== 0 ? '/' + arguments[0] : arguments[0],
+				callback: arguments[1]
 			});
 		}
 	}
 	
 	
-	// Expose the main layman function
+	
+	
+	
+	// +-----------------------------------------+
+	// | Expose the main layman function		 |
+	// +-----------------------------------------+
 	return layman;
 
 })();

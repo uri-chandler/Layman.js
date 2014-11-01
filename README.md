@@ -108,4 +108,43 @@ http.createServer(layman).listen(80);
 
 
 
+POST & GET
+----------
+Layman also supports registering layers for that will only handle GET or POST requests (PUT and DELETE are coming soon).  
+Of course, you can also define routes for each of these:
+```
+// Init
+var layman = require('layman'),
+	http = require('http');
+	
+// Only triggered for a GET request
+layman.get(function(req,res){
+	
+	// GET it ?
+	res.write('You are GETting this page');
+});
 
+// Only triggered for a POST request
+layman.post(function(req,res){
+	
+	// POST only
+	res.write('POST request');
+});
+
+// Using routes
+layman.get('/bla', function(req,res){
+    
+    // You're really GETting the hand of it!
+    res.write('All you GET is bla bla bla...');
+});
+
+// Start a new server, passing in layman as the middle-ware manager
+http.createServer(layman).listen(80);
+```
+
+
+
+
+Feedback ?
+----------
+For any comments \ feedback etc, contact [layman@isnice.me](mailto:layman@isnice.me)
