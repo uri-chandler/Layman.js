@@ -3,8 +3,8 @@
 // +-----------------------------------------------------------------+
 
 
-// Exporting the 'layman' function after it's properly setup
-module.exports = (function(){
+// Exporting a factory function that returns a new layer manager
+module.exports = function(){
 
 
 	// +-----------------------------------------+
@@ -28,6 +28,7 @@ module.exports = (function(){
 		handlers.push({
 			path	: layer.path,
 			method	: layer.method,
+			host	: layer.host,
 			callback: layer.callback || function(){}
 		});
 	}	
@@ -42,20 +43,34 @@ module.exports = (function(){
 	
 		// Get the path and method for the request
 		var path	= url.parse(req.url).pathname,
-			method	= req.method;
+			method	= req.method,
+			host	= req.headers.host.match(/(\w+.*)\:?/)[1];
+		
+		
+		
+		// To prevent nested laymans from ending the response chaing,
+		// we check for a 3rd argument to eqaul boolean true.
+		// If it exists, we know that 'this' layman is nested in an 'outer' layman,
+		// and so 'this' layman should not autoEnd the response (the 'outer' most layman should end the response)
+		if (arguments[2] === true) {layman.configs.autoEnd = false}
+		
+		
 		
 		// By order of FIFO, go over each request handler
 		handlers.every(function(handler){
 			
-			var matchPath	= handler.path === undefined || handler.path === path,
-				matchMethod	= handler.method === undefined || handler.method === method,
+			var matchPath	= handler.path	 === undefined	|| handler.path	  === path,
+				matchMethod	= handler.method === undefined	|| handler.method === method,
+				matchHost	= handler.host	 === undefined	|| handler.host	  === host,
 				result;
-
+			
 			// If the handler is supposed to handle this request
-			if (matchPath && matchMethod){
+			if (matchPath && matchMethod && matchHost){
 				
 				// Trigger the handler and save it's return value
-				result = handler.callback(req, res);
+				// We are passing a boolean true as a 3rd argument to 'callback', which will only
+				// be read if 'callback' is a nested layman (laymans can be nested, see docs for more info)
+				result = handler.callback(req, res, true);
 				
 				// If the handler resulted in 'false', end the response (no additional handlers will be triggered)
 				if (result === false) return false;
@@ -69,11 +84,11 @@ module.exports = (function(){
 		});
 		
 		
-		// Once all the required request handlers were called, end the response
-		res.end();
+		// If auto-end is set to true (default mode) - end the response (all handlers were triggered)
+		layman.configs.autoEnd && res.end();
 	}
 	
-
+	
 	
 	
 	// +-----------------------------------------+
@@ -157,13 +172,43 @@ module.exports = (function(){
 		}
 	}
 	
+	/**
+		Registers the passed in middleware as a layer to use for the specified host
+		
+		@params host		The host for which this layer will be triggerd
+		@params	callback	The actual middleware (callback) that will handle the request\response.
+	*/
+	layman.host = function(host, callback){
+		
+		// Overload 1: Passing in host as a string
+		if (typeof host === 'string' && typeof callback === 'function'){
+			
+			addLayer({
+				
+				host	: host,
+				callback: callback
+			});
+		}
+	};
 	
 	
+	
+	
+	
+	// +-----------------------------------------+
+	// | Layman instance settings				 |
+	// +-----------------------------------------+
+	
+	layman.configs = {
+		
+		autoEnd	: true									// End the response after all handlers ? (default:true)
+	};
+	
+
 	
 	
 	// +-----------------------------------------+
 	// | Expose the main layman function		 |
 	// +-----------------------------------------+
 	return layman;
-
-})();
+};
