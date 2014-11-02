@@ -166,7 +166,7 @@ http.createServer(site).listen(80);
 
 Nested Layers
 -------------
-In some cases, you might want to separate the layers that handle your 'sales' department from your 'blog'. Using layman, this is simple task:
+In some cases, you might want to separate the layers that handle your 'sales' department from your 'blog'. Using layman, this is a simple task:
 ```javascript
 // Init
 var layman = require('layman'),
@@ -302,7 +302,7 @@ sales.use('/thankyou', function(req,res){
 
 module.exports = sales;
 ```
-* Notice that since we setup different hosts for `sales` and `blog` in `main.js` - the routes that are used in each files will be respective of that specific domain
+* Notice that since we setup different hosts for `sales` and `blog` in `main.js` - the routes that are used in each file will be respective for the specified sub-domain
 
 
 
@@ -310,7 +310,7 @@ module.exports = sales;
 
 Change Log
 ----------
-#####v0.1.0
+#####v0.1.1
 - Reached first minor version! Yay!
 - Changed main 'layman' to return function
 - Added 'host' to mount layers to domain \ subdomain
