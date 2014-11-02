@@ -26,13 +26,47 @@ module.exports = function(){
 	function addLayer(layer){
 		
 		handlers.push({
-			path	: layer.path,
+			route	: layer.route,
 			method	: layer.method,
 			host	: layer.host,
 			callback: layer.callback || function(){}
 		});
 	}	
 
+	/**
+		A mediator function between the main layaer-registration (lay-reg) functions and 'addLayer'.
+		Used to parse the arguments passed to the lay-reg to easily support overloading for these functions.
+		
+		@params args		The original arguments onject that was passed into any of the lay-reg functions
+		@params options		Additional options so that any lay-reg function is able to overwrite default settings when registering a layer
+	*/
+	function register(args, options){
+		
+		// Overload 1: API used only with 'callback'
+		if (args.length === 1 && typeof args[0] === 'function'){
+		
+			addLayer({
+				
+				route	: options.route,
+				method	: options.method,
+				host	: options.host,
+				callback: args[0]
+			});
+		}
+		
+		// Overload 2: API used with 'route' AND 'callback'
+		if (args.length === 2 && typeof args[0] === 'string' && typeof args[1] === 'function'){
+			
+			addLayer({
+				
+				route	: args[0] === options.host ? undefined : args[0],
+				method	: options.method,
+				host	: options.host,
+				callback: args[1]
+			});
+		}
+	}
+	
 	/**
 		The main 'layman' function. Pass this function as your only request handler to your server
 	
@@ -59,7 +93,7 @@ module.exports = function(){
 		// By order of FIFO, go over each request handler
 		handlers.every(function(handler){
 			
-			var matchPath	= handler.path	 === undefined	|| handler.path	  === path,
+			var matchPath	= handler.route	 === undefined	|| handler.route  === path,
 				matchMethod	= handler.method === undefined	|| handler.method === method,
 				matchHost	= handler.host	 === undefined	|| handler.host	  === host,
 				result;
@@ -103,21 +137,7 @@ module.exports = function(){
 	*/
 	layman.use = function use(route, callback){
 	
-		// Overload 1: Calling use(callback)
-		if (arguments.length === 1 && typeof arguments[0] === 'function'){
-			
-			addLayer( {callback: arguments[0]} );
-		}
-		
-		// Overload 2: Calling use(route, callback)
-		if (arguments.length === 2 && typeof arguments[0] === 'string' && typeof arguments[1] === 'function'){
-			
-			addLayer({
-				
-				path	: arguments[0].indexOf('/') !== 0 ? '/' + arguments[0] : arguments[0],
-				callback: arguments[1]
-			});
-		}
+		register(arguments, {});
 	}
 	
 	/**
@@ -128,22 +148,7 @@ module.exports = function(){
 	*/
 	layman.get = function get(route, callback){
 	
-		// Overload 1: Calling get(callback)
-		if (arguments.length === 1 && typeof arguments[0] === 'function'){
-			
-			addLayer( {callback: arguments[0]} );
-		}
-		
-		// Overload 2: Calling get(route, callback)
-		if (arguments.length === 2 && typeof arguments[0] === 'string' && typeof arguments[1] === 'function'){
-			
-			addLayer({
-				
-				method	: 'GET',
-				path	: arguments[0].indexOf('/') !== 0 ? '/' + arguments[0] : arguments[0],
-				callback: arguments[1]
-			});
-		}
+		register(arguments, {method:'GET'});
 	}
 	
 	/**
@@ -154,22 +159,7 @@ module.exports = function(){
 	*/
 	layman.post = function post(route, callback){
 	
-		// Overload 1: Calling post(callback)
-		if (arguments.length === 1 && typeof arguments[0] === 'function'){
-			
-			addLayer( {callback: arguments[0]} );
-		}
-		
-		// Overload 2: Calling post(route, callback)
-		if (arguments.length === 2 && typeof arguments[0] === 'string' && typeof arguments[1] === 'function'){
-			
-			addLayer({
-				
-				method	: 'POST',
-				path	: arguments[0].indexOf('/') !== 0 ? '/' + arguments[0] : arguments[0],
-				callback: arguments[1]
-			});
-		}
+		register(arguments, {method:'POST'});
 	}
 	
 	/**
@@ -180,15 +170,7 @@ module.exports = function(){
 	*/
 	layman.host = function(host, callback){
 		
-		// Overload 1: Passing in host as a string
-		if (typeof host === 'string' && typeof callback === 'function'){
-			
-			addLayer({
-				
-				host	: host,
-				callback: callback
-			});
-		}
+		register(arguments, {host:host});
 	};
 	
 	

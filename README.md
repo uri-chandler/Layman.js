@@ -344,6 +344,9 @@ Roadmap
 <a name='changelog'></a>
 Change Log
 ----------
+#####v0.1.4
+- Refactored code to improve performance (even more ?? OMG!)
+
 #####v0.1.3
 - Updated README.md
 
