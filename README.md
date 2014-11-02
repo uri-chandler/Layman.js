@@ -1,26 +1,30 @@
 Layman.js
 =========
-A simple manager for HTTP request <--> response layers in node.js
+A simple, lightweight manager for HTTP Request <--> Response layers for node.js
 
-Layman.js is a simplified version of Sencha's Connect. It allows you to easily manage multiple layers of request <--> response handlers (aka middle-ware) for your node.js server.
+Layman.js is a simplified version of Senchalabs's Connect.  
+It allows you to easily manage multiple layers of Request <--> Response handlers (aka middleware) for your node.js web server.
 
-#### Table of Contents
-- Overview
-- Using Routes
-- Multiple Layers
-- Flow Control
-- POST & GET
-- Nested Layers
-- Multiple Hosts
-- Organizing Files
-- Change Log
-- Feedback
+### Contents
+- [Hello Layman](https://www.npmjs.org/package/layman#hello)
+- [Using Routes](https://www.npmjs.org/package/layman#routes)
+- [Multiple Layers](https://www.npmjs.org/package/layman#layers)
+- [Flow Control](https://www.npmjs.org/package/layman#flowcontrol)
+- [POST & GET](https://www.npmjs.org/package/layman#postget)
+- [Nested Layers](https://www.npmjs.org/package/layman#nested)
+- [Multiple Hosts](https://www.npmjs.org/package/layman#hosts)
+- [Organizing Files](https://www.npmjs.org/package/layman#files)
+- [Roadmap](https://www.npmjs.org/package/layman#roadmap)
+- [Change Log](https://www.npmjs.org/package/layman#changelog)
+- [Feedback](https://www.npmjs.org/package/layman#feedback)
 
 
-Overview
---------
-The following is the 'layman' version of a typical 'hello world' example.  
-Layman uses the popular syntax of `use(middleware)`, where `middleware` is a callback function that will get the `request` and `response` as it's only arguments:
+
+<a name='hello'></a>
+Hello Layman
+------------
+The following is the 'layman' version for 'hello world'. Layman uses the popular syntax of `use(middleware)`, where `middleware` is a callback function that will get the `request` and `response` as it's only arguments:  
+
 ```javascript
 // Init
 var layman = require('layman'),
@@ -30,20 +34,22 @@ var layman = require('layman'),
 // Add a middleware layer to handle request <--> response
 site.use(function(req,res){
 	
+	// Write some data to the response
 	res.write('layman is awesome!');
 });
 
-// Start a new server, passing in site as the middle-ware manager
+// Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
-`site` is just a function which is used as the main request handler for your server. Learn more about how layman works on the wiki pages.
+**Note:** `site` is just a callback function which is used as the main request handler for your server. Learn more about how layman works on the [Wiki pages on GitHub](https://github.com/ujc/Layman.js/wiki) (work in progress).
 
 
 
-
-Using routes
+<a name='routes'></a>
+Using Routes
 ------------
 If you want to use a certain middleware only for a specific route, you can do so by specifying the route as the first parameter to the `use(...)` function:  
+
 ```javascript
 // Init
 var layman = require('layman'),
@@ -57,17 +63,20 @@ site.use('/some/route/', function(req,res){
 	res.write('you are now on /some/route/');
 });
 
-// Start a new server, passing in site as the middle-ware manager
+// Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
+**Note:** The leading forward-slash `/` for the specified route is optional. Using `/foo` is the same as using `foo`.
 
 
 
 
+<a name='layers'></a>
 Multiple Layers
 ---------------
-Multiple layers are added by calling the `use(...)` function more than once, each time passing in a new layer that will handle the request <--> response process.  
-Layers are triggered in order of FIFO - the first layer that was registered is the first layer that gets called.  
+Multiple request handler layers are added by calling the `use(...)` function more than once, each time passing in a new layer that will handle the Request <--> Response pair.  
+Layers are triggered in order of FIFO - the first layer that was registered is the first layer that will handle the incoming request:  
+
 ```javascript
 // Init
 var layman = require('layman'),
@@ -77,27 +86,29 @@ var layman = require('layman'),
 // Add the first layer
 site.use(function(req,res){
 	
-	// First layer that gets called
+	// First layer that gets the request
 	res.write('hello ');
 });
 
 // Add the second layer
 site.use(function(req,res){
 	
-	// Second layer that gets called
+	// Second layer that gets the request
 	res.write('world!');
 });
 
-// Start a new server, passing in site as the middle-ware manager
+// Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
 
 
 
+<a name='flowcontrol'></a>
 Flow Control
 ------------
-A very common scenario is that one layer needs to end the response without passing control to any of the next layers that were registered.  
-This is done by having a layer function `return false`. When a layer returns `false`, the response is ended, and excecution of the following layers stops (internally, layman calls `res.end()`):  
+A very common scenario is that one layer needs to end the response without passing control to any of the next layers that were registered.  This is done by having that layer `return false`.  
+When a layer (aka callback, aka middleware) returns `false`, the response is ended and sent out, and excecution of any following layers stops (internally, layman calls `res.end()`):  
+
 ```javascript
 // Init
 var layman = require('layman'),
@@ -107,30 +118,32 @@ var layman = require('layman'),
 // This layer returns false, so the next layer will never get called
 site.use(function(req,res){
 	
-	// I don't like other layers handling my response
-	res.write('El Solo Layer');
+	// A lone wolf
+	res.write('El Solo Lobo');
 	
-	// Return false to send out the request, skipping layers that follow
+	// Return false to send out the request, skipping any following layers
 	return false;
 });
 
-// Nobody likes me );
+// Why doesn't anyone call me ?
 site.use(function(req,res){
 	
 	// Second layer that gets called
-	res.write('this text will never be seen. By anyone. Forever. Forever-ever!');
+	res.write('This text will never be seen. By anyone. Forever. Forever-ever!');
 });
 
-// Start a new server, passing in site as the middle-ware manager
+// Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
 
 
 
+<a name='postget'></a>
 POST & GET
 ----------
-Layman also supports registering layers for that will only handle GET or POST requests (PUT and DELETE are coming soon).  
-Of course, you can also define routes for each of these:
+Layman also supports registering layers that will only handle GET or POST requests (PUT and DELETE are coming soon).  
+You can also define routes for each of these:
+
 ```javascript
 // Init
 var layman = require('layman'),
@@ -148,40 +161,43 @@ site.get(function(req,res){
 site.post(function(req,res){
 	
 	// POST only
-	res.write('POST request');
+	res.write('This is a direct result of a POST request');
 });
 
 // Using routes
 site.get('/bla', function(req,res){
     
-    // You're really GETting the hand of it!
+    // You're really GETting the hang of it!
     res.write('All you GET is bla bla bla...');
 });
 
-// Start a new server, passing in site as the middle-ware manager
+// Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
 
 
 
+
+<a name='nested'></a>
 Nested Layers
 -------------
-In some cases, you might want to separate the layers that handle your 'sales' department from your 'blog'. Using layman, this is a simple task:
+In some cases, you're team might need to separate the layers that handle your 'sales' department from those that handle your 'blog'. Using layman, this is a really easy to accomplish:
+
 ```javascript
 // Init
 var layman = require('layman'),
 	http = require('http'),
+	site = layman(),
 	sales = layman(),
-	blog = layman(),
-	site = layman();
-	
-// Our blog
+	blog = layman();
+
+// Setup our blog
 blog.use(function(req,res){
     res.write('welcome to my awesome blog!!');
 });
 
 
-// Sales
+// Setup the sales department
 sales.use(function(req, res){
     res.write('buy now!');
 });
@@ -191,35 +207,37 @@ sales.post(function(req,res){
 });
 
 
-
-// Setup our site to use the correct layman based on the path
+// Setup the site to use the correct layman based on the route
 site.use('/sales', sales);
 site.use('/blog', blog);
 
-// Start a new server, passing in site as the middle-ware manager
+// Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
 
 
 
+<a name='hosts'></a>
 Multiple Hosts
 --------------
 The example below is similar to the code above - only this time instead of registering `sales` and `blog` with routes, we register each to it's respective sub-domain:
+
 ```javascript
 // Init
 var layman = require('layman'),
 	http = require('http'),
+	site = layman(),
 	blog = layman(),
-	sales = layman(),
-	site = layman();
-	
-// Our blog
+	sales = layman();
+
+
+// Setup our blog
 blog.use(function(req,res){
     res.write('welcome to my awesome blog!!');
 });
 
 
-// Sales
+// Setup the sales department
 sales.use(function(req, res){
     res.write('buy now!');
 });
@@ -227,29 +245,30 @@ sales.use(function(req, res){
 sales.post(function(req,res){
     res.write('thanks you for your purchase!');
 });
-
 
 
 // Setup our site to use the correct layman based on the path
 site.host('sales.site.com', sales);
 site.host('blog.site.com', blog);
 
-// Start a new server, passing in site as the middle-ware manager
+// Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
-* use `host` when you need to filter for a specifc domain \ subdomain
+* use `host` when you need to mount a specifc domain \ subdomain
 
 
 
 
-
+<a name='files'></a>
 Organizing Files
 ----------------
-In real applications, you'll want to organize your files in different ways. 
-Things are no different with layman, have a look below at the code below - it's the same 'Multiple Hosts' example from above - split into 3 files:
+In real world applications, you'll want to organize files in a way that is meaningful to your team.  
+Have a look below at the code below - it's the same 'Multiple Hosts' example from above - just split into 3 different files:
 
 `main.js`
+
 ```javascript
+// FILE: main.js
 // Init
 var http = require('http'),
     layman = require('layman'),
@@ -257,16 +276,18 @@ var http = require('http'),
     sales = require('./sales'),
     site = layman();
     
-// Setup our site's sub-domains
+// Setup our site's sub-domains to use the dedicated layman
 site.host('sales.site.com', sales);
 site.host('blog.site.com', blog);
 
-// Start a new server, passing in site as the middle-ware manager
+// Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```  
   
 `blog.js`
+
 ```javascript
+// FILE: blog.js
 // Init
 var layman = require('layman'),
     blog = layman();
@@ -285,7 +306,9 @@ module.exports = blog;
 ```
 
 `sales.js`
+
 ```javascript
+// FILE: sales.js
 // Init
 var layman = require('layman'),
     sales = layman();
@@ -302,28 +325,46 @@ sales.use('/thankyou', function(req,res){
 
 module.exports = sales;
 ```
-* Notice that since we setup different hosts for `sales` and `blog` in `main.js` - the routes that are used in each file will be respective for the specified sub-domain
+* Notice that since we setup different hosts for `sales` and `blog` in `main.js` - the routes that are used in each file will be relative to the specified sub-domain
 
 
 
 
+<a name='roadmap'></a>
+Roadmap
+-------
+- Create layman middleware and middleware bundles
+- Play nice with Connect\Express middleware
+- Built-in support for HTTP PUT and HTTP DELETE
 
+**Note:** You should be able to use any Connect middleware with Layman at the moment, however, this feature hasn't been fully tested yet (work in progress) 
+
+
+
+<a name='changelog'></a>
 Change Log
 ----------
+#####v0.1.3
+- Updated README.md
+
+#####v0.1.2
+- Updated README.md
+
 #####v0.1.1
 - Reached first minor version! Yay!
-- Changed main 'layman' to return function
-- Added 'host' to mount layers to domain \ subdomain
-- Added support for nested laymans. One layman can now `use` another layman
+- Change: Calling `require('layman')` now returns a factory function
+- New: You can now use `layman.host(...)` to mount layers to domain \ subdomain
+- New: Support for nested laymans like `oneLayman.use(twoLayman)`
 
 
 
 
 
-
+<a name='feedback'></a>
 Feedback ?
 ----------
-For any comments \ feedback etc, contact [layman@isnice.me](mailto:layman@isnice.me)
+Layman is still in development, and any criticism \ feedback is welcome.
+Please get in touch @ [layman@isnice.me](mailto:layman@isnice.me)
   
   
   
