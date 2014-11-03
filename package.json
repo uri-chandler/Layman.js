@@ -2,7 +2,7 @@
   "name"		: "layman",
   "description"	: "A simple manager for HTTP request <--> response layers in node.js",
   "author"		: "UJC <code@isnice.me>",
-  "version"		: "0.1.4",
+  "version"		: "0.1.5",
   "main"		: "layman.js",
   "license"		: "MIT",
   "repository"	: {
@@ -10,5 +10,5 @@
 	"type"	: "git",
 	"url"	: "https://github.com/ujc/Layman.js"
   },
-  "keywords": [ "layman", "layman.js", "connect", "express", "middleware", "http", "https", "server", "request" ]
+  "keywords": [ "layman", "layman.js", "connect", "express", "middleware", "http", "https", "web", "server", "web server", "request" ]
 }

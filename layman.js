@@ -125,6 +125,7 @@ module.exports = function(){
 	
 	
 	
+	
 	// +-----------------------------------------+
 	// | Add methods to allow registering layers |
 	// +-----------------------------------------+
@@ -171,6 +172,26 @@ module.exports = function(){
 	layman.host = function(host, callback){
 		
 		register(arguments, {host:host});
+	};
+	
+	/**
+		A helper function that allows users to easily start a web server using the 'this' layman.
+		This is just the same as if the user would have created the server on their own and passed in layman as the callback - it's just a convenience method
+		
+		@params	port	The port that the server will listen on. Defaults to 80.
+		
+		@returns 		The server that was started.
+	*/
+	layman.listen = function(port){
+	
+		// Create a new server, passing in 'this' layman as the main request handler
+		var server = require('http').createServer(layman);
+		
+		// Start the server on the specified port (defaults to 80)
+		server.listen(port || 80);
+		
+		// Return the server (in case the user wants to do other stuff with it)
+		return server;
 	};
 	
 	

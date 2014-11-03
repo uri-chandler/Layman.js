@@ -14,10 +14,14 @@ It allows you to easily manage multiple layers of Request <--> Response handlers
 - [Nested Layers](https://www.npmjs.org/package/layman#nested)
 - [Multiple Hosts](https://www.npmjs.org/package/layman#hosts)
 - [Organizing Files](https://www.npmjs.org/package/layman#files)
+- [Built-In Web Server](https://www.npmjs.org/package/layman#server)
 - [Roadmap](https://www.npmjs.org/package/layman#roadmap)
 - [Change Log](https://www.npmjs.org/package/layman#changelog)
 - [Feedback](https://www.npmjs.org/package/layman#feedback)
 
+
+
+***
 
 
 <a name='hello'></a>
@@ -45,6 +49,10 @@ http.createServer(site).listen(80);
 
 
 
+***
+
+
+
 <a name='routes'></a>
 Using Routes
 ------------
@@ -68,6 +76,9 @@ http.createServer(site).listen(80);
 ```
 **Note:** The leading forward-slash `/` for the specified route is optional. Using `/foo` is the same as using `foo`.
 
+
+
+***
 
 
 
@@ -103,6 +114,10 @@ http.createServer(site).listen(80);
 
 
 
+***
+
+
+
 <a name='flowcontrol'></a>
 Flow Control
 ------------
@@ -121,7 +136,7 @@ site.use(function(req,res){
 	// A lone wolf
 	res.write('El Solo Lobo');
 	
-	// Return false to send out the request, skipping any following layers
+	// Return false to send out the response, skipping any following layers
 	return false;
 });
 
@@ -135,6 +150,9 @@ site.use(function(req,res){
 // Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
+
+
+***
 
 
 
@@ -177,6 +195,10 @@ http.createServer(site).listen(80);
 
 
 
+***
+
+
+
 
 <a name='nested'></a>
 Nested Layers
@@ -214,6 +236,9 @@ site.use('/blog', blog);
 // Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
+
+
+***
 
 
 
@@ -256,6 +281,9 @@ http.createServer(site).listen(80);
 ```
 * use `host` when you need to mount a specifc domain \ subdomain
 
+
+
+***
 
 
 
@@ -329,6 +357,37 @@ module.exports = sales;
 
 
 
+***
+
+
+
+<a name='server'></a>
+Built-In Web Server
+-------------------
+Layman also provides a convenience method to start a new web server, making it even easier to implement in your next project:
+
+```javascript
+// Init
+var layman = require('layman'),
+    site = layman();
+
+// Setup our request handler(s)
+site.use(function(req,res){
+	res.write('it\'s a brave new world!');
+});
+
+// Site is up and running!
+site.listen(80);
+
+```
+**Note:** When using `listen()`, the port number is optional, and if omitted, the port number defaults to 80. The above is identical to `site.listen()`.
+
+
+
+
+***
+
+
 
 <a name='roadmap'></a>
 Roadmap
@@ -341,10 +400,17 @@ Roadmap
 
 
 
+***
+
+
+
 <a name='changelog'></a>
 Change Log
 ----------
-#####v0.1.4
+#####v0.1.5
+- Added: `layman.listen([port])` as a convenience method to start a new web server
+
+#####v0.1.4  
 - Refactored code to improve performance (even more ?? OMG!)
 
 #####v0.1.3
@@ -357,8 +423,11 @@ Change Log
 - Reached first minor version! Yay!
 - Change: Calling `require('layman')` now returns a factory function
 - New: You can now use `layman.host(...)` to mount layers to domain \ subdomain
-- New: Support for nested laymans like `oneLayman.use(twoLayman)`
+- New: Support for nested laymans like `oneLayman.use(twoLayman)`  
 
+
+
+***
 
 
 
