@@ -54,7 +54,7 @@ module.exports = function(){
 			});
 		}
 		
-		// Overload 2: API used with 'route' AND 'callback'
+		// Overload 2: API used with 'route' (or 'host') AND 'callback'
 		if (args.length === 2 && typeof args[0] === 'string' && typeof args[1] === 'function'){
 			
 			addLayer({
@@ -82,8 +82,8 @@ module.exports = function(){
 		
 		
 		
-		// To prevent nested laymans from ending the response chaing,
-		// we check for a 3rd argument to eqaul boolean true.
+		// To prevent nested laymans from ending the response chain,
+		// we check for a (secret) 3rd argument to eqaul boolean true.
 		// If it exists, we know that 'this' layman is nested in an 'outer' layman,
 		// and so 'this' layman should not autoEnd the response (the 'outer' most layman should end the response)
 		if (arguments[2] === true) {layman.configs.autoEnd = false}
@@ -93,6 +93,7 @@ module.exports = function(){
 		// By order of FIFO, go over each request handler
 		handlers.every(function(handler){
 			
+			// Init some tests to know if this handler should handle the request or not
 			var matchPath	= handler.route	 === undefined	|| handler.route  === path,
 				matchMethod	= handler.method === undefined	|| handler.method === method,
 				matchHost	= handler.host	 === undefined	|| handler.host	  === host,
@@ -102,8 +103,8 @@ module.exports = function(){
 			if (matchPath && matchMethod && matchHost){
 				
 				// Trigger the handler and save it's return value
-				// We are passing a boolean true as a 3rd argument to 'callback', which will only
-				// be read if 'callback' is a nested layman (laymans can be nested, see docs for more info)
+				// We are passing a (secret) boolean true as a 3rd argument to 'callback', which will only
+				// be read internally if 'callback' is a nested layman (laymans can be nested, see docs for more info)
 				result = handler.callback(req, res, true);
 				
 				// If the handler resulted in 'false', end the response (no additional handlers will be triggered)

@@ -6,18 +6,19 @@ Layman.js is a simplified version of Senchalabs's Connect.
 It allows you to easily manage multiple layers of Request <--> Response handlers (aka middleware) for your node.js web server.
 
 ### Contents
-- [Hello Layman](https://www.npmjs.org/package/layman#hello)
-- [Using Routes](https://www.npmjs.org/package/layman#routes)
-- [Multiple Layers](https://www.npmjs.org/package/layman#layers)
-- [Flow Control](https://www.npmjs.org/package/layman#flowcontrol)
-- [POST & GET](https://www.npmjs.org/package/layman#postget)
-- [Nested Layers](https://www.npmjs.org/package/layman#nested)
-- [Multiple Hosts](https://www.npmjs.org/package/layman#hosts)
-- [Organizing Files](https://www.npmjs.org/package/layman#files)
-- [Built-In Web Server](https://www.npmjs.org/package/layman#server)
-- [Roadmap](https://www.npmjs.org/package/layman#roadmap)
-- [Change Log](https://www.npmjs.org/package/layman#changelog)
-- [Feedback](https://www.npmjs.org/package/layman#feedback)
+- <a href='#hello'>Hello Layman</a>
+- <a href='#routes'>Using Routes</a>
+- <a href='#layers'>Multiple Layers</a>
+- <a href='#flowcontrol'>Flow Control</a>
+- <a href='#postget'>POST & GET</a>
+- <a href='#nested'>Nested Layers</a>
+- <a href='#hosts'>Multiple Hosts</a>
+- <a href='#files'>Organizing Files</a>
+- <a href='#server'>Built-In Web Server</a>
+- <a href='#roadmap'>Roadmap</a>
+- <a href='#changelog'>Change Log</a>
+- <a href='#feedback'>Feedback</a>  
+
 
 
 
