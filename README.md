@@ -557,7 +557,6 @@ site.configs.autoAsync = false;
 site.configs.hostRegex	= /(\w+[^:,]*)\:?/;  
 ```
 **Note:** `autoEnd` has no effect on asynchronous layers  
-**Note:** All configs can be changes at run-time (i.e. via a middleware layer)
 
 
 
