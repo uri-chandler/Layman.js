@@ -248,7 +248,8 @@ site.use(function(req, res){
 http.createServer(site).listen(80);
 ```
 **Note:** No need for the layer to `return true`, since `autoAsync` is turned on.  
-**Note:** Also, we're not using a`next` layer here, since the layer handles both success and failure.
+**Note:** Also, we're not using a`next` layer here, since the layer handles both success and failure.  
+**Note:** Read more about the available configs <a href='configs'>here</a>
 
 
 
