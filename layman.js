@@ -12,7 +12,10 @@ module.exports = function(){
 	// +-----------------------------------------+
 
 	var handlers = [],									// Will hold all the request handlers
-		url		 = require('url');						// Just so it's easier to get the requested path
+		url		 = require('url'),						// Just so it's easier to get the requested path
+		request,										// Will hold the request object between async middleware
+		respopnse,										// Will hold the response object between async middleware
+		nextLayer;										// Will hold a pointer to the next middleware that needs to run (for async layers)
 		
 		
 	/**
@@ -29,7 +32,8 @@ module.exports = function(){
 			route	: layer.route,
 			method	: layer.method,
 			host	: layer.host,
-			callback: layer.callback || function(){}
+			callback: layer.callback || function(){},
+			connect : layer.connect
 		});
 	}	
 
@@ -65,6 +69,113 @@ module.exports = function(){
 				callback: args[1]
 			});
 		}
+		
+		// Overload 3: API used with 'connect' AND 'callback'
+		if (args.length === 2 && args[0] === true && typeof args[1] === 'function'){
+			
+			addLayer({
+				
+				route	: options.route,
+				method	: options.method,
+				host	: options.host,
+				callback: args[1],
+				connect : true
+			});
+		}
+	
+		// Overload 4: API used with 'connect' AND 'route' (or 'host') AND 'callback'
+		if (args.length === 3 && args[0] === true && typeof args[1] === 'string' && typeof args[2] === 'function'){
+			
+			addLayer({
+				
+				route	: args[1] === options.host ? undefined : args[1],
+				method	: options.method,
+				host	: options.host,
+				callback: args[2],
+				connect : true
+			});
+		}
+	
+	}
+	
+	/**
+		Continues execution of middleware layers, starting at position [nextLayer]
+	*/
+	function next(){
+		
+		processLayers(request, response, nextLayer);
+	}
+	
+	/**
+		Runs over the registered layers, starting at [startIndex], and calls them one by one based on the passed in request.
+		Also, the following return value of each layer determines the flow control:
+		
+			1. If the layer returns nothing (undefined etc..) - continue to the next layer
+			2. If the layer returns boolean false - stop processing layers.
+			3. If the layer returns boolean true - then the layer started something async. Stop processing layers, and save required data to continue processing once async operation is done.
+	*/
+	function processLayers(req, res, startIndex){
+		
+		// Init
+		var path		= url.parse(req.url).pathname,
+			method		= req.method,
+			host		= (req.headers.host) ? req.headers.host.match(layman.configs.hostRegex)[1] : undefined,
+			pointer		= startIndex,
+			length		= handlers.length,
+			matchPath,
+			matchMethod,
+			matchHost,
+			handler,
+			result;
+		
+		// Remove leading '/' from path (if any)
+		if (path[0] === '/') path = path.slice(1);
+		
+		// Go over all layers, starting at position [pointer]
+		for (; pointer < length; pointer++){
+			
+			// Get the current handler, and match it with the request params
+			handler		= handlers[pointer];
+			matchPath	= handler.route	 === undefined	|| handler.route  === path;
+			matchMethod	= handler.method === undefined	|| handler.method === method;
+			matchHost	= handler.host	 === undefined	|| handler.host	  === host;
+			
+			// If the request matches the conditions for this layer
+			if (matchPath && matchMethod && matchHost){
+				
+				// If layman is setup to use async mode ,OR, if the layer is a 'Connect' middleware - we use async mode
+				if (layman.configs.autoAsync === true || handler.connect === true) {
+					
+					// Call the middleware, passing in the required params for a 'Connect' middleware
+					handler.callback(req, res, next);
+					
+					// And also stop processing any additional layers, since this is layer is 'async' by default
+					nextLayer	= pointer + 1;					// Pointer to the next layer that needs to run once the previous async layer is done
+					request		= req;							// The request object that will be used with the next iteration of layers processing
+					response	= res;							// The response object that will be used with the next iteration of layers processing
+					return;										// Stop processing layers (skipping the 'res.end()' since an async process is still running)
+				}
+
+				
+				// Call the handler, passing in the reqeust, response, 'next()', and true (which is only used internally by nested laymans) 
+				result = handler.callback(req, res, next, true);
+				
+				// If the middleware returned boolean false - don't process any more layers
+				if (result === false) break;
+
+				// If the middleware returned boolean true - the layer did something ASYNC, so save the info we need to use when resuming layer processing
+				if (result === true){
+					
+					nextLayer	= pointer + 1;					// Pointer to the next layer that needs to run once the previous async layer is done
+					request		= req;							// The request object that will be used with the next iteration of layers processing
+					response	= res;							// The response object that will be used with the next iteration of layers processing
+					return;										// Stop processing layers (skipping the 'res.end()' since an async process is still running)
+				}
+			}
+		}
+		
+		// If auto-end is set to true (default mode) - end the response (all handlers were triggered)
+		layman.configs.autoEnd && res.end();
 	}
 	
 	/**
@@ -75,52 +186,14 @@ module.exports = function(){
 	*/
 	function layman(req,res){
 	
-		// Get the path and method for the request
-		var path	= url.parse(req.url).pathname,
-			method	= req.method,
-			host	= req.headers.host.match(/(\w+.*)\:?/)[1];
-		
-		
-		
 		// To prevent nested laymans from ending the response chain,
-		// we check for a (secret) 3rd argument to eqaul boolean true.
+		// we check for a (secret) 4th argument to eqaul boolean true.
 		// If it exists, we know that 'this' layman is nested in an 'outer' layman,
 		// and so 'this' layman should not autoEnd the response (the 'outer' most layman should end the response)
-		if (arguments[2] === true) {layman.configs.autoEnd = false}
+		if (arguments[3] === true) {layman.configs.autoEnd = false}
 		
-		
-		
-		// By order of FIFO, go over each request handler
-		handlers.every(function(handler){
-			
-			// Init some tests to know if this handler should handle the request or not
-			var matchPath	= handler.route	 === undefined	|| handler.route  === path,
-				matchMethod	= handler.method === undefined	|| handler.method === method,
-				matchHost	= handler.host	 === undefined	|| handler.host	  === host,
-				result;
-			
-			// If the handler is supposed to handle this request
-			if (matchPath && matchMethod && matchHost){
-				
-				// Trigger the handler and save it's return value
-				// We are passing a (secret) boolean true as a 3rd argument to 'callback', which will only
-				// be read internally if 'callback' is a nested layman (laymans can be nested, see docs for more info)
-				result = handler.callback(req, res, true);
-				
-				// If the handler resulted in 'false', end the response (no additional handlers will be triggered)
-				if (result === false) return false;
-				
-				// Otherwise, continue the next handler
-				else return true;
-			}
-			
-			// Otherwise, skip to the next handler
-			return true;
-		});
-		
-		
-		// If auto-end is set to true (default mode) - end the response (all handlers were triggered)
-		layman.configs.autoEnd && res.end();
+		// Start processing layers for the Request <--> Response pair, starting at layer 0
+		processLayers(req, res, 0);
 	}
 	
 	
@@ -195,6 +268,10 @@ module.exports = function(){
 		return server;
 	};
 	
+
+	
+	
+	
 	
 	
 	
@@ -205,10 +282,13 @@ module.exports = function(){
 	
 	layman.configs = {
 		
-		autoEnd	: true									// End the response after all handlers ? (default:true)
+		autoEnd		: true,					// End the response after all handlers ? (default:true)
+		autoAsync	: false,				// By default, Layman processes layers synchronously
+		hostRegex	: /(\w+[^:,]*)\:?/		// The regex to use when when performing 'match(regex)' on the hostname. The final comparison is against the first matching group
 	};
 	
 
+	
 	
 	
 	// +-----------------------------------------+
