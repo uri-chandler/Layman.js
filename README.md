@@ -289,7 +289,7 @@ site.use(function(req,res){
 // Start a new server, passing in 'site' as the main request <--> response manager
 http.createServer(site).listen(80);
 ```
-**Note:** Make sure to read about <a name='async'>asynchronous layers</a> for more info on how to control layers
+**Note:** Make sure to read about <a href='#async'>Asynchronous Layers</a> for more info on how to control layers
 
 
 
