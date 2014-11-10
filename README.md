@@ -619,8 +619,8 @@ Roadmap
 - <s>Play nice with [Connect](https://github.com/senchalabs/connect) middleware</s> <a href='#connect'>Complete, Woohoo!</a>
 - Built-in support for HTTP PUT and HTTP DELETE
 
-**Note:** You should be able to use any Connect middleware with Layman at the moment, however, this feature hasn't been fully tested yet (work in progress) 
-
+**Note:** Got any ideas on how to make Layman better ?  
+let us know @ [layman@isnice.me](mailto:layman@isnice.me)
 
 
 ***
