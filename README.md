@@ -145,7 +145,7 @@ site.use(function(req,res){
 	// Use node's `readFile(...)` method to server `index.html`
 	files.readFile('index.html', function(err, data){
 		
-		// If anything went wrong, we simply trigger the next layer
+		// If anything went wrong, write a very sad message to the user
 		if (err) {
 		
 			// End the response, and indicate that we have issues
