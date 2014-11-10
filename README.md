@@ -606,7 +606,7 @@ http.createServer(site).listen(80);
 ```
 **Note:** At the moment, Layman does not support Connect error middleware (might be added in the future)  
 **Note:** You can use any of Layman's API such as `get(...)` \ `post(...)` \ `host(...)` and routing (using `use(true, '/some/route', middleware)`  
-**Note:** There are more Connect middleware than we can test against. If you find any bugs, please get in touch @ [layman@isnice.me](mailto:layman@isnice.me) OR open an issue on github
+**Note:** There are more Connect middleware than we can test against. If you find any bugs, please get in touch @ [layman@isnice.me](mailto:layman@isnice.me) \ open an issue on github
 
 ***
 
@@ -631,7 +631,7 @@ Roadmap
 Change Log
 ----------
 #####v0.1.6
-- New: Built-in support for Layman ASYNC layers (<a hfre='#async'>more info</a>)  
+- New: Built-in support for Layman ASYNC layers (<a href='#async'>more info</a>)  
 - New: Layman is now compatible with [Connect](https://github.com/senchalabs/connect) middleware (<a hfre='#connect'>more info</a>)  
 - Update: Documentation now includes info Layman's `configs` object (<a hfre='#configs'>more info</a>) 
 
