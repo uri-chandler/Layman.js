@@ -212,7 +212,7 @@ http.createServer(site).listen(80);
 
 
 #####Example 3: Show casing `autoAsync=true` for run-time based asynchronous control
-In certain cases, you may need to determine if the `next` layer should be asynchronous or not based on some data that is only available at runtime (when a request is sent to the server \ when a database operation is complete \ when a 3rd party proxy is ready for communication):
+In certain cases, you may need to determine if the `next` layer should be asynchronous or not based on some data that is only available at runtime (when a request is sent to the server \ when a database operation is complete \ when a 3rd party proxy is ready for communication \ ...):
 
 ```javascript
 // Init
