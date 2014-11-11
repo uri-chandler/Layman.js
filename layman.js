@@ -61,6 +61,8 @@ module.exports = function(){
 		// Overload 2: API used with 'route' (or 'host') AND 'callback'
 		if (args.length === 2 && typeof args[0] === 'string' && typeof args[1] === 'function'){
 			
+			if (args[0][0] === '/') args[0] = args[0].slice(1);
+			
 			addLayer({
 				
 				route	: args[0] === options.host ? undefined : args[0],
@@ -86,6 +88,8 @@ module.exports = function(){
 		// Overload 4: API used with 'connect' AND 'route' (or 'host') AND 'callback'
 		if (args.length === 3 && args[0] === true && typeof args[1] === 'string' && typeof args[2] === 'function'){
 			
+			if (args[1][0] === '/') args[1] = args[1].slice(1);
+
 			addLayer({
 				
 				route	: args[1] === options.host ? undefined : args[1],

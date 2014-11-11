@@ -630,6 +630,9 @@ let us know @ [layman@isnice.me](mailto:layman@isnice.me)
 <a name='changelog'></a>
 Change Log
 ----------
+#####v0.1.7
+- Fix: Leading slash in route would casue URL parsing error in some URI formats
+
 #####v0.1.6
 - New: Built-in support for Layman ASYNC layers (<a href='#async'>more info</a>)  
 - New: Layman is now compatible with [Connect](https://github.com/senchalabs/connect) middleware (<a hfre='#connect'>more info</a>)  
